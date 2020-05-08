@@ -598,21 +598,14 @@ enum class CSWeaponType : int
 
 struct DefItem_t
 {
-	DefItem_t(const char* displayName,
-			  const char* entityName,
-			  const char* entityModel,
-			  const char* killIcon = nullptr)
-	{
-		this->displayName = displayName;
-		this->entityName = entityName;
-		this->entityModel = entityModel;
-		this->killIcon = killIcon;
-	}
+	constexpr DefItem_t(const char* _displayName, const char* _entityName, const char* _entityModel, const char* _killIcon = nullptr)
+	: displayName(_displayName), entityName(_entityName), entityModel(_entityModel), killIcon(_killIcon)
+	{}
 
-	const char* displayName = nullptr;
-	const char* entityName = nullptr;
-	const char* entityModel = nullptr;
-	const char* killIcon = nullptr;
+	const char* displayName;
+	const char* entityName;
+	const char* entityModel;
+	const char* killIcon;
 };
 
 struct AttribItem_t
@@ -1706,90 +1699,97 @@ struct GrenadeInfo
 	}
 };
 
-const std::map<ItemDefinitionIndex, DefItem_t> ItemDefinitionIndexMap = {
-		{ ItemDefinitionIndex::INVALID,						{ "<-Default->", "DEFAULT", "", "" } },
-		{ ItemDefinitionIndex::WEAPON_DEAGLE,				{ "#SFUI_WPNHUD_DesertEagle", "weapon_deagle", "models/weapons/v_pist_deagle.mdl", "deagle" } },
-		{ ItemDefinitionIndex::WEAPON_ELITE,				{ "#SFUI_WPNHUD_Elites", "weapon_elite", "models/weapons/v_pist_elite.mdl", "elite" } },
-		{ ItemDefinitionIndex::WEAPON_FIVESEVEN,			{ "#SFUI_WPNHUD_FiveSeven", "weapon_fiveseven", "models/weapons/v_pist_fiveseven.mdl", "fiveseven" } },
-		{ ItemDefinitionIndex::WEAPON_GLOCK,				{ "#SFUI_WPNHUD_Glock18", "weapon_glock", "models/weapons/v_pist_glock18.mdl", "glock" } },
-		{ ItemDefinitionIndex::WEAPON_AK47,					{ "#SFUI_WPNHUD_AK47", "weapon_ak47", "models/weapons/v_rif_ak47.mdl", "ak47" } },
-		{ ItemDefinitionIndex::WEAPON_AUG,					{ "#SFUI_WPNHUD_Aug", "weapon_aug", "models/weapons/v_rif_aug.mdl", "aug" } },
-		{ ItemDefinitionIndex::WEAPON_AWP,					{ "#SFUI_WPNHUD_AWP", "weapon_awp", "models/weapons/v_snip_awp.mdl", "awp" } },
-		{ ItemDefinitionIndex::WEAPON_FAMAS,				{ "#SFUI_WPNHUD_Famas", "weapon_famas", "models/weapons/v_rif_famas.mdl", "famas" } },
-		{ ItemDefinitionIndex::WEAPON_G3SG1,				{ "#SFUI_WPNHUD_G3SG1", "weapon_g3sg1", "models/weapons/v_snip_g3sg1.mdl", "g3sg1" } },
-		{ ItemDefinitionIndex::WEAPON_GALILAR,				{ "#SFUI_WPNHUD_GalilAR", "weapon_galilar", "models/weapons/v_rif_galilar.mdl", "galilar" } },
-		{ ItemDefinitionIndex::WEAPON_M249,					{ "#SFUI_WPNHUD_M249", "weapon_m249", "models/weapons/v_mach_m249para.mdl", "m249" } },
-		{ ItemDefinitionIndex::WEAPON_M4A1,					{ "#SFUI_WPNHUD_M4A1", "weapon_m4a1", "models/weapons/v_rif_m4a1.mdl", "m4a1" } },
-		{ ItemDefinitionIndex::WEAPON_MAC10,				{ "#SFUI_WPNHUD_MAC10", "weapon_mac10", "models/weapons/v_smg_mac10.mdl", "mac10" } },
-		{ ItemDefinitionIndex::WEAPON_P90,					{ "#SFUI_WPNHUD_P90", "weapon_p90", "models/weapons/v_smg_p90.mdl", "p90" } },
-		{ ItemDefinitionIndex::WEAPON_UMP45,				{ "#SFUI_WPNHUD_UMP45", "weapon_ump45", "models/weapons/v_smg_ump45.mdl", "ump45" } },
-        { ItemDefinitionIndex::WEAPON_MP5,                  { "#SFUI_WPNHUD_MP5SD", "weapon_mp5sd", "models/weapons/v_smg_mp5sd.mdl", "mp5sd" } },
-		{ ItemDefinitionIndex::WEAPON_XM1014,				{ "#SFUI_WPNHUD_xm1014", "weapon_xm1014", "models/weapons/v_shot_xm1014.mdl", "xm1014" } },
-		{ ItemDefinitionIndex::WEAPON_BIZON,				{ "#SFUI_WPNHUD_Bizon", "weapon_bizon", "models/weapons/v_smg_bizon.mdl", "bizon" } },
-		{ ItemDefinitionIndex::WEAPON_MAG7,					{ "#SFUI_WPNHUD_Mag7", "weapon_mag7", "models/weapons/v_shot_mag7.mdl", "mag7" } },
-		{ ItemDefinitionIndex::WEAPON_NEGEV,				{ "#SFUI_WPNHUD_Negev", "weapon_negev", "models/weapons/v_mach_negev.mdl", "negev" } },
-		{ ItemDefinitionIndex::WEAPON_SAWEDOFF,				{ "#SFUI_WPNHUD_Sawedoff", "weapon_sawedoff", "models/weapons/v_shot_sawedoff.mdl", "sawedoff" } },
-		{ ItemDefinitionIndex::WEAPON_TEC9,					{ "#SFUI_WPNHUD_Tec9", "weapon_tec9", "models/weapons/v_pist_tec9.mdl", "tec9" } },
-		{ ItemDefinitionIndex::WEAPON_TASER,				{ "#SFUI_WPNHUD_Taser", "weapon_taser", "models/weapons/v_eq_taser.mdl", "taser" } },
-		{ ItemDefinitionIndex::WEAPON_HKP2000,				{ "#SFUI_WPNHUD_HKP2000", "weapon_hkp2000", "models/weapons/v_pist_hkp2000.mdl", "hkp2000" } },
-		{ ItemDefinitionIndex::WEAPON_MP7,					{ "#SFUI_WPNHUD_MP7", "weapon_mp7", "models/weapons/v_smg_mp7.mdl", "mp7" } },
-		{ ItemDefinitionIndex::WEAPON_MP9,					{ "#SFUI_WPNHUD_MP9", "weapon_mp9", "models/weapons/v_smg_mp9.mdl", "mp9" } },
-		{ ItemDefinitionIndex::WEAPON_NOVA,					{ "#SFUI_WPNHUD_Nova", "weapon_nova", "models/weapons/v_shot_nova.mdl", "nova" } },
-		{ ItemDefinitionIndex::WEAPON_P250,					{ "#SFUI_WPNHUD_P250", "weapon_p250", "models/weapons/v_pist_p250.mdl", "p250" } },
-		{ ItemDefinitionIndex::WEAPON_SCAR20,				{ "#SFUI_WPNHUD_SCAR20", "weapon_scar20", "models/weapons/v_snip_scar20.mdl", "scar20" } },
-		{ ItemDefinitionIndex::WEAPON_SG556,				{ "#SFUI_WPNHUD_SG556", "weapon_sg556", "models/weapons/v_rif_sg556.mdl", "sg556" } },
-		{ ItemDefinitionIndex::WEAPON_SSG08,				{ "#SFUI_WPNHUD_SSG08", "weapon_ssg08", "models/weapons/v_snip_ssg08.mdl", "ssg08" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE,				{ "#SFUI_WPNHUD_Knife", "weapon_knife", "models/weapons/v_knife_default_ct.mdl", "knife_default_ct" } },
-		{ ItemDefinitionIndex::WEAPON_FLASHBANG,			{ "#SFUI_WPNHUD_FLASHBANG", "weapon_flashbang", "models/weapons/v_eq_flashbang.mdl", "flashbang" } },
-		{ ItemDefinitionIndex::WEAPON_HEGRENADE,			{ "#SFUI_WPNHUD_HE_Grenade", "weapon_hegrenade", "models/weapons/v_eq_fraggrenade.mdl", "hegrenade" } },
-		{ ItemDefinitionIndex::WEAPON_SMOKEGRENADE,			{ "#SFUI_WPNHUD_Smoke_Grenade", "weapon_smokegrenade", "models/weapons/v_eq_smokegrenade.mdl", "smokegrenade" } },
-		{ ItemDefinitionIndex::WEAPON_MOLOTOV,				{ "#SFUI_WPNHUD_MOLOTOV", "weapon_molotov", "models/weapons/v_eq_molotov.mdl", "inferno" } },
-		{ ItemDefinitionIndex::WEAPON_DECOY,				{ "#SFUI_WPNHUD_DECOY", "weapon_decoy", "models/weapons/v_eq_decoy.mdl", "decoy" } },
-		{ ItemDefinitionIndex::WEAPON_INCGRENADE,			{ "#SFUI_WPNHUD_IncGrenade", "weapon_incgrenade", "models/weapons/v_eq_incendiarygrenade.mdl", "inferno" } },
-		{ ItemDefinitionIndex::WEAPON_C4,					{ "#SFUI_WPNHUD_C4", "weapon_c4", "models/weapons/v_ied.mdl" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_T,				{ "#SFUI_WPNHUD_Knife", "weapon_knife_t", "models/weapons/v_knife_default_t.mdl", "knife_t" } },
-		{ ItemDefinitionIndex::WEAPON_M4A1_SILENCER,		{ "#SFUI_WPNHUD_M4_SILENCER", "weapon_m4a1_silencer", "models/weapons/v_rif_m4a1_s.mdl", "m4a1_silencer" } },
-		{ ItemDefinitionIndex::WEAPON_USP_SILENCER,			{ "#SFUI_WPNHUD_USP_SILENCER", "weapon_usp_silencer", "models/weapons/v_pist_223.mdl", "usp_silencer" } },
-		{ ItemDefinitionIndex::WEAPON_CZ75A,				{ "#SFUI_WPNHUD_CZ75", "weapon_cz75a", "models/weapons/v_pist_cz_75.mdl", "cz75a" } },
-		{ ItemDefinitionIndex::WEAPON_REVOLVER,				{ "#SFUI_WPNHUD_REVOLVER", "weapon_revolver", "models/weapons/v_pist_revolver.mdl", "revolver" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_BAYONET,		{ "#SFUI_WPNHUD_KnifeBayonet", "weapon_knife_bayonet", "models/weapons/v_knife_bayonet.mdl", "bayonet" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_FLIP,			{ "#SFUI_WPNHUD_KnifeFlip", "weapon_knife_flip", "models/weapons/v_knife_flip.mdl", "knife_flip" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_GUT,			{ "#SFUI_WPNHUD_KnifeGut", "weapon_knife_gut", "models/weapons/v_knife_gut.mdl", "knife_gut" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_KARAMBIT,		{ "#SFUI_WPNHUD_KnifeKaram", "weapon_knife_karambit", "models/weapons/v_knife_karam.mdl", "knife_karambit" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_M9_BAYONET,		{ "#SFUI_WPNHUD_KnifeM9", "weapon_knife_m9_bayonet", "models/weapons/v_knife_m9_bay.mdl", "knife_m9_bayonet" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_TACTICAL,		{ "#SFUI_WPNHUD_KnifeTactical", "weapon_knife_tactical", "models/weapons/v_knife_tactical.mdl", "knife_tactical" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_FALCHION,		{ "#SFUI_WPNHUD_knife_falchion_advanced", "weapon_knife_falchion", "models/weapons/v_knife_falchion_advanced.mdl", "knife_falchion" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_SURVIVAL_BOWIE,	{ "#SFUI_WPNHUD_knife_survival_bowie", "weapon_knife_survival_bowie", "models/weapons/v_knife_survival_bowie.mdl", "knife_survival_bowie" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_BUTTERFLY,		{ "#SFUI_WPNHUD_Knife_Butterfly", "weapon_knife_butterfly", "models/weapons/v_knife_butterfly.mdl", "knife_butterfly" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_PUSH,			{ "#SFUI_WPNHUD_knife_push", "weapon_knife_push", "models/weapons/v_knife_push.mdl", "knife_push" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_URSUS,			{ "#SFUI_WPNHUD_knife_ursus", "weapon_knife_ursus", "models/weapons/v_knife_ursus.mdl", "knife_ursus" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_GYPSY_JACKKNIFE,{ "#SFUI_WPNHUD_knife_gypsy_jackknife", "weapon_knife_gypsy_jackknife", "models/weapons/v_knife_gypsy_jackknife.mdl", "knife_gypsy_jackknife" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_STILETTO,		{ "#SFUI_WPNHUD_knife_stiletto", "weapon_knife_stiletto", "models/weapons/v_knife_stiletto.mdl", "knife_stiletto" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_WIDOWMAKER,		{ "#SFUI_WPNHUD_knife_widowmaker", "weapon_knife_widowmaker", "models/weapons/v_knife_widowmaker.mdl", "knife_widowmaker" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_CSS,			{ "#SFUI_WPNHUD_KnifeCSS", "weapon_knife_css", "models/weapons/v_knife_css.mdl", "knife_css" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFE_GHOST,			{ "#SFUI_WPNHUD_knife_ghost", "weapon_knife_ghost", "models/weapons/v_knife_ghost.mdl", "knife_ghost" } },
-		{ ItemDefinitionIndex::WEAPON_KNIFEGG,				{ "#SFUI_WPNHUD_Knife_GG", "weapon_knifegg", "models/weapons/v_knife_gg.mdl", "knifegg" } },
-		{ ItemDefinitionIndex::GLOVE_STUDDED_BLOODHOUND,	{ "#CSGO_Wearable_t_studdedgloves", "studded_bloodhound_gloves", "models/weapons/v_models/arms/glove_bloodhound/v_glove_bloodhound.mdl" } },
-		{ ItemDefinitionIndex::GLOVE_T_SIDE,				{ "#CSGO_Wearable_t_defaultgloves", "t_gloves", "models/weapons/v_models/arms/glove_fingerless/v_glove_fingerless.mdl" } },
-		{ ItemDefinitionIndex::GLOVE_CT_SIDE,				{ "#CSGO_Wearable_ct_defaultgloves", "ct_gloves", "models/weapons/v_models/arms/glove_hardknuckle/v_glove_hardknuckle.mdl" } },
-		{ ItemDefinitionIndex::GLOVE_SPORTY,				{ "#CSGO_Wearable_v_sporty_glove", "sporty_gloves", "models/weapons/v_models/arms/glove_sporty/v_glove_sporty.mdl" } },
-		{ ItemDefinitionIndex::GLOVE_SLICK,					{ "#CSGO_Wearable_v_slick_glove", "slick_gloves", "models/weapons/v_models/arms/glove_slick/v_glove_slick.mdl" } },
-		{ ItemDefinitionIndex::GLOVE_LEATHER_WRAP,			{ "#CSGO_Wearable_v_leather_handwrap", "leather_handwraps", "models/weapons/v_models/arms/glove_handwrap_leathery/v_glove_handwrap_leathery.mdl" } },
-		{ ItemDefinitionIndex::GLOVE_MOTORCYCLE,			{ "#CSGO_Wearable_v_motorcycle_glove", "motorcycle_gloves", "models/weapons/v_models/arms/glove_motorcycle/v_glove_motorcycle.mdl" } },
-		{ ItemDefinitionIndex::GLOVE_SPECIALIST,			{ "#CSGO_Wearable_v_specialist_glove", "specialist_gloves", "models/weapons/v_models/arms/glove_specialist/v_glove_specialist.mdl" } },
-		{ ItemDefinitionIndex::WEAPON_FISTS,                { "#SFUI_WPNHUD_Fists", "weapon_fists", "models/weapons/v_fists.mdl", "fists"} },
-		{ ItemDefinitionIndex::WEAPON_SHIELD,               { "#SFUI_WPNHUD_Shield", "weapon_shield", "models/weapons/v_shield.mdf"} },
-		{ ItemDefinitionIndex::WEAPON_HEALTHSHOT,           { "#SFUI_WPNHUD_Healthshot", "weapon_healthshot", "models/weapons/v_healthshot.mdl"} },
-		{ ItemDefinitionIndex::WEAPON_TAGRENADE,            { "#SFUI_WPNHUD_TAGrenade", "weapon_tagrenade", "models/weapons/v_sonar_bomb.mdl"} },
-		{ ItemDefinitionIndex::WEAPON_BREACHCHARGE,         { "#SFUI_WPNHUD_BreachCharge", "weapon_breachcharge", "models/weapons/v_breachcharge.mdl", "breachcharge"} },
-		{ ItemDefinitionIndex::WEAPON_TABLET,               { "#SFUI_WPNHUD_Tablet", "weapon_tablet", "models/weapons/v_tablet.mdl"} },
-		{ ItemDefinitionIndex::WEAPON_AXE,                  { "#SFUI_WPNHUD_Axe", "weapon_axe", "models/weapons/v_axe.mdl", "axe"} },
-		{ ItemDefinitionIndex::WEAPON_HAMMER,               { "#SFUI_WPNHUD_Hammer", "weapon_hammer", "models/weapons/v_hammer.mdl", "hammer"} },
-		{ ItemDefinitionIndex::WEAPON_SPANNER,              { "#SFUI_WPNHUD_Spanner", "weapon_spanner", "models/weapons/v_spanner.mdl", "spanner"} },
-		{ ItemDefinitionIndex::WEAPON_FIREBOMB,             { "#SFUI_WPNHUD_FIREBOMB", "weapon_firebomb", "models/weapons/v_eq_molotov.mdl", "inferno"} },
-		{ ItemDefinitionIndex::WEAPON_DIVERSION,            { "#SFUI_WPNHUD_Diversion", "weapon_diversion", "models/weapons/v_eq_decoy.mdl", "decoy"} },
-		{ ItemDefinitionIndex::WEAPON_FRAG_GRENADE,         { "#SFUI_WPNHUD_frag_Grenade", "weapon_frag_grenade", "models/weapons/v_eq_fraggrenade.mdl", "hegrenade"} },
-		{ ItemDefinitionIndex::WEAPON_BUMPMINE, 			{ "#SFUI_WPNHUD_BUMPMINE", "weapon_bumpmine", "models/weapons/v_eq_fraggrenade.mdl"} }
+//hack to replace the std::map lol
+struct ItemPair
+{
+    constexpr ItemPair( const ItemDefinitionIndex index, const DefItem_t &item ) : first(index), second(item) {}
+    ItemDefinitionIndex first;
+    DefItem_t second;
+};
+inline constexpr std::array<ItemPair, 83> ItemDefinitionIndexMap = {
+		ItemPair( ItemDefinitionIndex::INVALID,						DefItem_t("<-Default->", "DEFAULT", "", "" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_DEAGLE,				DefItem_t( "#SFUI_WPNHUD_DesertEagle", "weapon_deagle", "models/weapons/v_pist_deagle.mdl", "deagle" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_ELITE,				DefItem_t( "#SFUI_WPNHUD_Elites", "weapon_elite", "models/weapons/v_pist_elite.mdl", "elite" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_FIVESEVEN,			DefItem_t( "#SFUI_WPNHUD_FiveSeven", "weapon_fiveseven", "models/weapons/v_pist_fiveseven.mdl", "fiveseven" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_GLOCK,				DefItem_t( "#SFUI_WPNHUD_Glock18", "weapon_glock", "models/weapons/v_pist_glock18.mdl", "glock" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_AK47,					DefItem_t( "#SFUI_WPNHUD_AK47", "weapon_ak47", "models/weapons/v_rif_ak47.mdl", "ak47" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_AUG,					DefItem_t( "#SFUI_WPNHUD_Aug", "weapon_aug", "models/weapons/v_rif_aug.mdl", "aug" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_AWP,					DefItem_t( "#SFUI_WPNHUD_AWP", "weapon_awp", "models/weapons/v_snip_awp.mdl", "awp" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_FAMAS,				DefItem_t( "#SFUI_WPNHUD_Famas", "weapon_famas", "models/weapons/v_rif_famas.mdl", "famas" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_G3SG1,				DefItem_t( "#SFUI_WPNHUD_G3SG1", "weapon_g3sg1", "models/weapons/v_snip_g3sg1.mdl", "g3sg1" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_GALILAR,				DefItem_t( "#SFUI_WPNHUD_GalilAR", "weapon_galilar", "models/weapons/v_rif_galilar.mdl", "galilar" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_M249,					DefItem_t( "#SFUI_WPNHUD_M249", "weapon_m249", "models/weapons/v_mach_m249para.mdl", "m249" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_M4A1,					DefItem_t( "#SFUI_WPNHUD_M4A1", "weapon_m4a1", "models/weapons/v_rif_m4a1.mdl", "m4a1" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_MAC10,				DefItem_t( "#SFUI_WPNHUD_MAC10", "weapon_mac10", "models/weapons/v_smg_mac10.mdl", "mac10" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_P90,					DefItem_t( "#SFUI_WPNHUD_P90", "weapon_p90", "models/weapons/v_smg_p90.mdl", "p90" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_UMP45,				DefItem_t( "#SFUI_WPNHUD_UMP45", "weapon_ump45", "models/weapons/v_smg_ump45.mdl", "ump45" ) ),
+        ItemPair( ItemDefinitionIndex::WEAPON_MP5,                  DefItem_t( "#SFUI_WPNHUD_MP5SD", "weapon_mp5sd", "models/weapons/v_smg_mp5sd.mdl", "mp5sd" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_XM1014,				DefItem_t( "#SFUI_WPNHUD_xm1014", "weapon_xm1014", "models/weapons/v_shot_xm1014.mdl", "xm1014" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_BIZON,				DefItem_t( "#SFUI_WPNHUD_Bizon", "weapon_bizon", "models/weapons/v_smg_bizon.mdl", "bizon" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_MAG7,					DefItem_t( "#SFUI_WPNHUD_Mag7", "weapon_mag7", "models/weapons/v_shot_mag7.mdl", "mag7" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_NEGEV,				DefItem_t( "#SFUI_WPNHUD_Negev", "weapon_negev", "models/weapons/v_mach_negev.mdl", "negev" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_SAWEDOFF,				DefItem_t( "#SFUI_WPNHUD_Sawedoff", "weapon_sawedoff", "models/weapons/v_shot_sawedoff.mdl", "sawedoff" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_TEC9,					DefItem_t( "#SFUI_WPNHUD_Tec9", "weapon_tec9", "models/weapons/v_pist_tec9.mdl", "tec9" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_TASER,				DefItem_t( "#SFUI_WPNHUD_Taser", "weapon_taser", "models/weapons/v_eq_taser.mdl", "taser" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_HKP2000,				DefItem_t( "#SFUI_WPNHUD_HKP2000", "weapon_hkp2000", "models/weapons/v_pist_hkp2000.mdl", "hkp2000" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_MP7,					DefItem_t( "#SFUI_WPNHUD_MP7", "weapon_mp7", "models/weapons/v_smg_mp7.mdl", "mp7" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_MP9,					DefItem_t( "#SFUI_WPNHUD_MP9", "weapon_mp9", "models/weapons/v_smg_mp9.mdl", "mp9" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_NOVA,					DefItem_t( "#SFUI_WPNHUD_Nova", "weapon_nova", "models/weapons/v_shot_nova.mdl", "nova" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_P250,					DefItem_t( "#SFUI_WPNHUD_P250", "weapon_p250", "models/weapons/v_pist_p250.mdl", "p250" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_SCAR20,				DefItem_t( "#SFUI_WPNHUD_SCAR20", "weapon_scar20", "models/weapons/v_snip_scar20.mdl", "scar20" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_SG556,				DefItem_t( "#SFUI_WPNHUD_SG556", "weapon_sg556", "models/weapons/v_rif_sg556.mdl", "sg556" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_SSG08,				DefItem_t( "#SFUI_WPNHUD_SSG08", "weapon_ssg08", "models/weapons/v_snip_ssg08.mdl", "ssg08" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE,				DefItem_t( "#SFUI_WPNHUD_Knife", "weapon_knife", "models/weapons/v_knife_default_ct.mdl", "knife_default_ct" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_FLASHBANG,			DefItem_t( "#SFUI_WPNHUD_FLASHBANG", "weapon_flashbang", "models/weapons/v_eq_flashbang.mdl", "flashbang" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_HEGRENADE,			DefItem_t( "#SFUI_WPNHUD_HE_Grenade", "weapon_hegrenade", "models/weapons/v_eq_fraggrenade.mdl", "hegrenade" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_SMOKEGRENADE,			DefItem_t( "#SFUI_WPNHUD_Smoke_Grenade", "weapon_smokegrenade", "models/weapons/v_eq_smokegrenade.mdl", "smokegrenade" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_MOLOTOV,				DefItem_t( "#SFUI_WPNHUD_MOLOTOV", "weapon_molotov", "models/weapons/v_eq_molotov.mdl", "inferno" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_DECOY,				DefItem_t( "#SFUI_WPNHUD_DECOY", "weapon_decoy", "models/weapons/v_eq_decoy.mdl", "decoy" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_INCGRENADE,			DefItem_t( "#SFUI_WPNHUD_IncGrenade", "weapon_incgrenade", "models/weapons/v_eq_incendiarygrenade.mdl", "inferno" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_C4,					DefItem_t( "#SFUI_WPNHUD_C4", "weapon_c4", "models/weapons/v_ied.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_T,				DefItem_t( "#SFUI_WPNHUD_Knife", "weapon_knife_t", "models/weapons/v_knife_default_t.mdl", "knife_t" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_M4A1_SILENCER,		DefItem_t( "#SFUI_WPNHUD_M4_SILENCER", "weapon_m4a1_silencer", "models/weapons/v_rif_m4a1_s.mdl", "m4a1_silencer" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_USP_SILENCER,			DefItem_t( "#SFUI_WPNHUD_USP_SILENCER", "weapon_usp_silencer", "models/weapons/v_pist_223.mdl", "usp_silencer" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_CZ75A,				DefItem_t( "#SFUI_WPNHUD_CZ75", "weapon_cz75a", "models/weapons/v_pist_cz_75.mdl", "cz75a" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_REVOLVER,				DefItem_t( "#SFUI_WPNHUD_REVOLVER", "weapon_revolver", "models/weapons/v_pist_revolver.mdl", "revolver" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_BAYONET,		DefItem_t( "#SFUI_WPNHUD_KnifeBayonet", "weapon_knife_bayonet", "models/weapons/v_knife_bayonet.mdl", "bayonet" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_FLIP,			DefItem_t( "#SFUI_WPNHUD_KnifeFlip", "weapon_knife_flip", "models/weapons/v_knife_flip.mdl", "knife_flip" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_GUT,			DefItem_t( "#SFUI_WPNHUD_KnifeGut", "weapon_knife_gut", "models/weapons/v_knife_gut.mdl", "knife_gut" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_KARAMBIT,		DefItem_t( "#SFUI_WPNHUD_KnifeKaram", "weapon_knife_karambit", "models/weapons/v_knife_karam.mdl", "knife_karambit" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_M9_BAYONET,		DefItem_t( "#SFUI_WPNHUD_KnifeM9", "weapon_knife_m9_bayonet", "models/weapons/v_knife_m9_bay.mdl", "knife_m9_bayonet" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_TACTICAL,		DefItem_t( "#SFUI_WPNHUD_KnifeTactical", "weapon_knife_tactical", "models/weapons/v_knife_tactical.mdl", "knife_tactical" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_FALCHION,		DefItem_t( "#SFUI_WPNHUD_knife_falchion_advanced", "weapon_knife_falchion", "models/weapons/v_knife_falchion_advanced.mdl", "knife_falchion" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_SURVIVAL_BOWIE,	DefItem_t( "#SFUI_WPNHUD_knife_survival_bowie", "weapon_knife_survival_bowie", "models/weapons/v_knife_survival_bowie.mdl", "knife_survival_bowie" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_BUTTERFLY,		DefItem_t( "#SFUI_WPNHUD_Knife_Butterfly", "weapon_knife_butterfly", "models/weapons/v_knife_butterfly.mdl", "knife_butterfly" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_PUSH,			DefItem_t( "#SFUI_WPNHUD_knife_push", "weapon_knife_push", "models/weapons/v_knife_push.mdl", "knife_push" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_URSUS,			DefItem_t( "#SFUI_WPNHUD_knife_ursus", "weapon_knife_ursus", "models/weapons/v_knife_ursus.mdl", "knife_ursus" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_GYPSY_JACKKNIFE,DefItem_t( "#SFUI_WPNHUD_knife_gypsy_jackknife", "weapon_knife_gypsy_jackknife", "models/weapons/v_knife_gypsy_jackknife.mdl", "knife_gypsy_jackknife" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_STILETTO,		DefItem_t( "#SFUI_WPNHUD_knife_stiletto", "weapon_knife_stiletto", "models/weapons/v_knife_stiletto.mdl", "knife_stiletto" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_WIDOWMAKER,		DefItem_t( "#SFUI_WPNHUD_knife_widowmaker", "weapon_knife_widowmaker", "models/weapons/v_knife_widowmaker.mdl", "knife_widowmaker" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_CSS,			DefItem_t( "#SFUI_WPNHUD_KnifeCSS", "weapon_knife_css", "models/weapons/v_knife_css.mdl", "knife_css" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFE_GHOST,			DefItem_t( "#SFUI_WPNHUD_knife_ghost", "weapon_knife_ghost", "models/weapons/v_knife_ghost.mdl", "knife_ghost" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_KNIFEGG,				DefItem_t( "#SFUI_WPNHUD_Knife_GG", "weapon_knifegg", "models/weapons/v_knife_gg.mdl", "knifegg" ) ),
+		ItemPair( ItemDefinitionIndex::GLOVE_STUDDED_BLOODHOUND,	DefItem_t( "#CSGO_Wearable_t_studdedgloves", "studded_bloodhound_gloves", "models/weapons/v_models/arms/glove_bloodhound/v_glove_bloodhound.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::GLOVE_T_SIDE,				DefItem_t( "#CSGO_Wearable_t_defaultgloves", "t_gloves", "models/weapons/v_models/arms/glove_fingerless/v_glove_fingerless.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::GLOVE_CT_SIDE,				DefItem_t( "#CSGO_Wearable_ct_defaultgloves", "ct_gloves", "models/weapons/v_models/arms/glove_hardknuckle/v_glove_hardknuckle.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::GLOVE_SPORTY,				DefItem_t( "#CSGO_Wearable_v_sporty_glove", "sporty_gloves", "models/weapons/v_models/arms/glove_sporty/v_glove_sporty.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::GLOVE_SLICK,					DefItem_t( "#CSGO_Wearable_v_slick_glove", "slick_gloves", "models/weapons/v_models/arms/glove_slick/v_glove_slick.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::GLOVE_LEATHER_WRAP,			DefItem_t( "#CSGO_Wearable_v_leather_handwrap", "leather_handwraps", "models/weapons/v_models/arms/glove_handwrap_leathery/v_glove_handwrap_leathery.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::GLOVE_MOTORCYCLE,			DefItem_t( "#CSGO_Wearable_v_motorcycle_glove", "motorcycle_gloves", "models/weapons/v_models/arms/glove_motorcycle/v_glove_motorcycle.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::GLOVE_SPECIALIST,			DefItem_t( "#CSGO_Wearable_v_specialist_glove", "specialist_gloves", "models/weapons/v_models/arms/glove_specialist/v_glove_specialist.mdl" ) ),
+		ItemPair( ItemDefinitionIndex::WEAPON_FISTS,                DefItem_t( "#SFUI_WPNHUD_Fists", "weapon_fists", "models/weapons/v_fists.mdl", "fists") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_SHIELD,               DefItem_t( "#SFUI_WPNHUD_Shield", "weapon_shield", "models/weapons/v_shield.mdf") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_HEALTHSHOT,           DefItem_t( "#SFUI_WPNHUD_Healthshot", "weapon_healthshot", "models/weapons/v_healthshot.mdl") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_TAGRENADE,            DefItem_t( "#SFUI_WPNHUD_TAGrenade", "weapon_tagrenade", "models/weapons/v_sonar_bomb.mdl") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_BREACHCHARGE,         DefItem_t( "#SFUI_WPNHUD_BreachCharge", "weapon_breachcharge", "models/weapons/v_breachcharge.mdl", "breachcharge") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_TABLET,               DefItem_t( "#SFUI_WPNHUD_Tablet", "weapon_tablet", "models/weapons/v_tablet.mdl") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_AXE,                  DefItem_t( "#SFUI_WPNHUD_Axe", "weapon_axe", "models/weapons/v_axe.mdl", "axe") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_HAMMER,               DefItem_t( "#SFUI_WPNHUD_Hammer", "weapon_hammer", "models/weapons/v_hammer.mdl", "hammer") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_SPANNER,              DefItem_t( "#SFUI_WPNHUD_Spanner", "weapon_spanner", "models/weapons/v_spanner.mdl", "spanner") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_FIREBOMB,             DefItem_t( "#SFUI_WPNHUD_FIREBOMB", "weapon_firebomb", "models/weapons/v_eq_molotov.mdl", "inferno") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_DIVERSION,            DefItem_t( "#SFUI_WPNHUD_Diversion", "weapon_diversion", "models/weapons/v_eq_decoy.mdl", "decoy") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_FRAG_GRENADE,         DefItem_t( "#SFUI_WPNHUD_frag_Grenade", "weapon_frag_grenade", "models/weapons/v_eq_fraggrenade.mdl", "hegrenade") ),
+		ItemPair( ItemDefinitionIndex::WEAPON_BUMPMINE, 			DefItem_t( "#SFUI_WPNHUD_BUMPMINE", "weapon_bumpmine", "models/weapons/v_eq_fraggrenade.mdl") )
 };
 
 #define FL_ONGROUND				(1<<0)	// At rest / on the ground

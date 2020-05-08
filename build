@@ -9,7 +9,7 @@ function echo_red {
 	echo -e "\\e[31m$*\\e[0m"
 }
 
-cmake . || exit 1
+cmake . -DCMAKE_BUILD_TYPE="Release" || exit 1
 
 if ! hash patchelf 2>/dev/null; then
     echo_red -e "You need to install the \"patchelf\" command!\nUse your package manager to install it, or get source here:\nhttps://github.com/NixOS/patchelf"
@@ -36,6 +36,7 @@ make -j"$(grep -c "^processor" /proc/cpuinfo)" "$@" || exit 1
 if [ -f build_id ]; then
     filename=$(cat build_id)
     rm "$filename"
+    rm "$filename.debug"
     if [ -f "/usr/lib/${filename}" ]; then
     	echo -e "Note: Old file found at /usr/lib/${filename}\n"
         #sudo rm "/usr/lib/${filename}"

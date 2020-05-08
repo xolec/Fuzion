@@ -1,10 +1,8 @@
 #include "settings.h"
 
-#include <dirent.h>
-#include <fstream>
-#include <unistd.h>
-
-#include "json/json.h"
+#include "rapidjson/document.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/stringbuffer.h"
 #include "fonts.h"
 #include "Utils/draw.h"
 #include "Hacks/clantagchanger.h"
@@ -19,61 +17,54 @@
 #include "Hacks/esp.h"
 #include "interfaces.h"
 
+#include <dirent.h>
+#include <fstream>
+#include <unistd.h>
+#include <sstream>
 
-void GetVal(Json::Value &config, int* setting)
+static void GetVal(rapidjson::Value &config, int* setting)
 {
-	if (config.isNull())
+	if (config.IsNull())
 		return;
 
-	*setting = config.asInt();
+	*setting = config.GetInt();
 }
 
-void GetVal(Json::Value &config, bool* setting)
+static void GetVal(rapidjson::Value &config, bool* setting)
 {
-	if (config.isNull())
+	if (config.IsNull())
 		return;
 
-	*setting = config.asBool();
+	*setting = config.GetBool();
 }
 
-void GetVal(Json::Value &config, float* setting)
+static void GetVal(rapidjson::Value &config, float* setting)
 {
-	if (config.isNull())
+	if (config.IsNull())
 		return;
 
-	*setting = config.asFloat();
+	*setting = config.GetFloat();
 }
 
-void GetVal(Json::Value &config, ImColor* setting)
+static void GetVal(rapidjson::Value &config, char** setting)
 {
-	if (config.isNull())
+	if (config.IsNull())
 		return;
 
-	GetVal(config[XORSTR("r")], &setting->Value.x);
-	GetVal(config[XORSTR("g")], &setting->Value.y);
-	GetVal(config[XORSTR("b")], &setting->Value.z);
-	GetVal(config[XORSTR("a")], &setting->Value.w);
+	*setting = strdup(config.GetString());
 }
 
-void GetVal(Json::Value &config, char** setting)
+static void GetVal(rapidjson::Value &config, char* setting)
 {
-	if (config.isNull())
+	if (config.IsNull())
 		return;
 
-	*setting = strdup(config.asCString());
+	strcpy(setting, config.GetString());
 }
 
-void GetVal(Json::Value &config, char* setting)
+static void GetVal(rapidjson::Value &config, ColorVar* setting)
 {
-	if (config.isNull())
-		return;
-
-	strcpy(setting, config.asCString());
-}
-
-void GetVal(Json::Value &config, ColorVar* setting)
-{
-	if (config.isNull())
+	if (config.IsNull())
 		return;
 
 	GetVal(config[XORSTR("r")], &setting->color.Value.x);
@@ -84,9 +75,9 @@ void GetVal(Json::Value &config, ColorVar* setting)
 	GetVal(config[XORSTR("rainbowSpeed")], &setting->rainbowSpeed);
 }
 
-void GetVal(Json::Value &config, HealthColorVar* setting)
+static void GetVal(rapidjson::Value &config, HealthColorVar* setting)
 {
-	if (config.isNull())
+	if (config.IsNull())
 		return;
 
 	GetVal(config[XORSTR("r")], &setting->color.Value.x);
@@ -99,34 +90,26 @@ void GetVal(Json::Value &config, HealthColorVar* setting)
 }
 
 template <typename Ord, Ord (*lookupFunction)(std::string)>
-void GetOrdinal(Json::Value& config, Ord* setting)
+static void GetOrdinal(const rapidjson::Value &config, Ord* setting)
 {
-	if (config.isNull())
+	if (config.IsNull())
 		return;
 
 	Ord value;
-	if (config.isString())
-		value = lookupFunction(config.asString());
+	if (config.IsString())
+		value = lookupFunction(config.GetString());
 	else
-		value = (Ord) config.asInt();
+		value = (Ord) config.GetInt();
 
 	*setting = value;
 }
 
-void GetButtonCode(Json::Value &config, enum ButtonCode_t* setting)
+static void GetButtonCode(rapidjson::Value &config, enum ButtonCode_t* setting)
 {
 	GetOrdinal<enum ButtonCode_t, Util::GetButtonCode>(config, setting);
 }
 
-void LoadColor(Json::Value &config, ImColor color)
-{
-	config[XORSTR("r")] = color.Value.x;
-	config[XORSTR("g")] = color.Value.y;
-	config[XORSTR("b")] = color.Value.z;
-	config[XORSTR("a")] = color.Value.w;
-}
-
-void LoadColor(Json::Value &config, ColorVar color)
+static void LoadColor(rapidjson::Value &config, ColorVar color)
 {
 	config[XORSTR("r")] = color.color.Value.x;
 	config[XORSTR("g")] = color.color.Value.y;
@@ -136,7 +119,7 @@ void LoadColor(Json::Value &config, ColorVar color)
 	config[XORSTR("rainbowSpeed")] = color.rainbowSpeed;
 }
 
-void LoadColor(Json::Value &config, HealthColorVar color)
+static void LoadColor(rapidjson::Value &config, HealthColorVar color)
 {
 	config[XORSTR("r")] = color.color.Value.x;
 	config[XORSTR("g")] = color.color.Value.y;
@@ -149,14 +132,14 @@ void LoadColor(Json::Value &config, HealthColorVar color)
 
 void Settings::LoadDefaultsOrSave(std::string path)
 {
-	Json::Value settings;
-	Json::StyledWriter styledWriter;
+    rapidjson::Document settings;
 
 	LoadColor(settings[XORSTR("UI")][XORSTR("mainColor")], Settings::UI::mainColor);
 	LoadColor(settings[XORSTR("UI")][XORSTR("bodyColor")], Settings::UI::bodyColor);
 	LoadColor(settings[XORSTR("UI")][XORSTR("fontColor")], Settings::UI::fontColor);
 	LoadColor(settings[XORSTR("UI")][XORSTR("accentColor")], Settings::UI::accentColor);
-	settings[XORSTR("UI")][XORSTR("Fonts")][XORSTR("ESP")][XORSTR("family")] = Settings::UI::Fonts::ESP::family;
+	settings[XORSTR("UI")][XORSTR("Fonts")][XORSTR("ESP")][XORSTR("family")]
+	.SetString(Settings::UI::Fonts::ESP::family, strlen(Settings::UI::Fonts::ESP::family), settings.GetAllocator());
 	settings[XORSTR("UI")][XORSTR("Fonts")][XORSTR("ESP")][XORSTR("size")] = Settings::UI::Fonts::ESP::size;
 	settings[XORSTR("UI")][XORSTR("Fonts")][XORSTR("ESP")][XORSTR("flags")] = Settings::UI::Fonts::ESP::flags;
 
@@ -165,7 +148,7 @@ void Settings::LoadDefaultsOrSave(std::string path)
 		// TODO this is kind of a hack and i'm too tired to find a better way to do this
 		// yes i tried defining a variable, skinSetting, and giving it the same value but woooooo operator overloading
 		// in C++ and weird shit
-		#define weaponSetting settings[XORSTR("Aimbot")][XORSTR("weapons")][Util::Items::GetItemName((enum ItemDefinitionIndex) i.first)]
+		#define weaponSetting settings[XORSTR("Aimbot")][XORSTR("weapons")][Util::Items::GetItemName((enum ItemDefinitionIndex) i.first).c_str()]
 		weaponSetting[XORSTR("Enabled")] = i.second.enabled;
 		weaponSetting[XORSTR("Silent")] = i.second.silent;
 		weaponSetting[XORSTR("Friendly")] = i.second.friendly;
@@ -174,7 +157,8 @@ void Settings::LoadDefaultsOrSave(std::string path)
 		weaponSetting[XORSTR("engageLockTR")] = i.second.engageLockTR;
 		weaponSetting[XORSTR("engageLockTTR")] = i.second.engageLockTTR;
 		weaponSetting[XORSTR("TargetBone")] = (int) i.second.bone;
-		weaponSetting[XORSTR("AimKey")] = Util::GetButtonName(i.second.aimkey);
+		std::string aimkey =  Util::GetButtonName(i.second.aimkey);
+		weaponSetting[XORSTR("AimKey")].SetString( aimkey.c_str(), aimkey.length(), settings.GetAllocator() );
 		weaponSetting[XORSTR("AimKeyOnly")] = i.second.aimkeyOnly;
 		weaponSetting[XORSTR("Smooth")][XORSTR("Enabled")] = i.second.smoothEnabled;
 		weaponSetting[XORSTR("Smooth")][XORSTR("Amount")] = i.second.smoothAmount;
@@ -234,7 +218,8 @@ void Settings::LoadDefaultsOrSave(std::string path)
 	settings[XORSTR("Resolver")][XORSTR("resolve_all")] = Settings::Resolver::resolveAll;
 
 	settings[XORSTR("Triggerbot")][XORSTR("enabled")] = Settings::Triggerbot::enabled;
-	settings[XORSTR("Triggerbot")][XORSTR("key")] = Util::GetButtonName(Settings::Triggerbot::key);
+	std::string triggerbotKey = Util::GetButtonName(Settings::Triggerbot::key);
+	settings[XORSTR("Triggerbot")][XORSTR("key")].SetString( triggerbotKey.c_str(), triggerbotKey.length(), settings.GetAllocator() );
 	settings[XORSTR("Triggerbot")][XORSTR("Filters")][XORSTR("enemies")] = Settings::Triggerbot::Filters::enemies;
 	settings[XORSTR("Triggerbot")][XORSTR("Filters")][XORSTR("allies")] = Settings::Triggerbot::Filters::allies;
 	settings[XORSTR("Triggerbot")][XORSTR("Filters")][XORSTR("walls")] = Settings::Triggerbot::Filters::walls;
@@ -253,7 +238,8 @@ void Settings::LoadDefaultsOrSave(std::string path)
 	settings[XORSTR("ESP")][XORSTR("backend")] = (int)Settings::ESP::backend;
     settings[XORSTR("UI")][XORSTR("imGuiAliasedLines")] = Settings::UI::imGuiAliasedLines;
     settings[XORSTR("UI")][XORSTR("imGuiAliasedFill")] = Settings::UI::imGuiAliasedFill;
-	settings[XORSTR("ESP")][XORSTR("key")] = Util::GetButtonName(Settings::ESP::key);
+    std::string espKey =  Util::GetButtonName(Settings::ESP::key);
+	settings[XORSTR("ESP")][XORSTR("key")].SetString( espKey.c_str(), espKey.length(), settings.GetAllocator() );
 	LoadColor(settings[XORSTR("ESP")][XORSTR("enemy_color")], Settings::ESP::enemyColor);
 	LoadColor(settings[XORSTR("ESP")][XORSTR("enemy_visible_color")], Settings::ESP::enemyVisibleColor);
 	LoadColor(settings[XORSTR("ESP")][XORSTR("ally_color")], Settings::ESP::allyColor);
@@ -407,14 +393,21 @@ void Settings::LoadDefaultsOrSave(std::string path)
 
 	settings[XORSTR("Spammer")][XORSTR("KillSpammer")][XORSTR("enabled")] = Settings::Spammer::KillSpammer::enabled;
 	settings[XORSTR("Spammer")][XORSTR("KillSpammer")][XORSTR("say_team")] = Settings::Spammer::KillSpammer::sayTeam;
-	Json::Value killSpammerMessages;
-	for (auto it : Settings::Spammer::KillSpammer::messages)
-		killSpammerMessages.append(it);
+
+	rapidjson::Value killSpammerMessages(rapidjson::kArrayType);
+	for (const std::string &msg : Settings::Spammer::KillSpammer::messages){
+	    rapidjson::Value string(rapidjson::kStringType);
+	    string.SetString( msg.c_str(), settings.GetAllocator() );
+	    killSpammerMessages.PushBack( string, settings.GetAllocator() );
+	}
 	settings[XORSTR("Spammer")][XORSTR("KillSpammer")][XORSTR("messages")] = killSpammerMessages;
 
-	Json::Value normalSpammerMessages;
-	for (auto it : Settings::Spammer::NormalSpammer::messages)
-		normalSpammerMessages.append(it);
+    rapidjson::Value normalSpammerMessages(rapidjson::kArrayType);
+    for (const std::string &msg : Settings::Spammer::NormalSpammer::messages){
+        rapidjson::Value string(rapidjson::kStringType);
+        string.SetString( msg.c_str(), settings.GetAllocator() );
+        normalSpammerMessages.PushBack( string, settings.GetAllocator() );
+    }
 	settings[XORSTR("Spammer")][XORSTR("NormalSpammer")][XORSTR("messages")] = normalSpammerMessages;
 
 	settings[XORSTR("Spammer")][XORSTR("PositionSpammer")][XORSTR("show_name")] = Settings::Spammer::PositionSpammer::showName;
@@ -475,7 +468,8 @@ void Settings::LoadDefaultsOrSave(std::string path)
 	settings[XORSTR("FOVChanger")][XORSTR("ignore_scope")] = Settings::FOVChanger::ignoreScope;
 
 	settings[XORSTR("Airstuck")][XORSTR("enabled")] = Settings::Airstuck::enabled;
-	settings[XORSTR("Airstuck")][XORSTR("key")] = Util::GetButtonName(Settings::Airstuck::key);
+	std::string airstuckKey = Util::GetButtonName(Settings::Airstuck::key);
+	settings[XORSTR("Airstuck")][XORSTR("key")].SetString( airstuckKey.c_str(), airstuckKey.length(), settings.GetAllocator() );
 
 	settings[XORSTR("SkinChanger")][XORSTR("Skins")][XORSTR("enabled")] = Settings::Skinchanger::Skins::enabled;
 	settings[XORSTR("SkinChanger")][XORSTR("Models")][XORSTR("enabled")] = Settings::Skinchanger::Models::enabled;
@@ -485,13 +479,14 @@ void Settings::LoadDefaultsOrSave(std::string path)
 	{
 		const AttribItem_t& skin = item.second;
 
-		#define skinSetting settings[XORSTR("SkinChanger")][XORSTR("skinsCT")][Util::Items::GetItemConfigEntityName(item.first)]
-		skinSetting[XORSTR("ItemDefinitionIndex")] = Util::Items::GetItemConfigEntityName(skin.itemDefinitionIndex);
+		#define skinSetting settings[XORSTR("SkinChanger")][XORSTR("skinsCT")][Util::Items::GetItemConfigEntityName(item.first).c_str()]
+		std::string itemName = Util::Items::GetItemConfigEntityName(skin.itemDefinitionIndex);
+		skinSetting[XORSTR("ItemDefinitionIndex")].SetString( itemName.c_str(), itemName.length(), settings.GetAllocator() );
 		skinSetting[XORSTR("PaintKit")] = skin.fallbackPaintKit;
 		skinSetting[XORSTR("Wear")] = skin.fallbackWear;
 		skinSetting[XORSTR("Seed")] = skin.fallbackSeed;
 		skinSetting[XORSTR("StatTrak")] = skin.fallbackStatTrak;
-		skinSetting[XORSTR("CustomName")] = skin.customName;
+		skinSetting[XORSTR("CustomName")].SetString( skin.customName.c_str(), skin.customName.length(), settings.GetAllocator() );
 		#undef skinSetting
 	}
 
@@ -499,13 +494,14 @@ void Settings::LoadDefaultsOrSave(std::string path)
 	{
 		const AttribItem_t& skin = item.second;
 
-		#define skinSetting settings[XORSTR("SkinChanger")][XORSTR("skinsT")][Util::Items::GetItemConfigEntityName(item.first)]
-		skinSetting[XORSTR("ItemDefinitionIndex")] = Util::Items::GetItemConfigEntityName(skin.itemDefinitionIndex);
+		#define skinSetting settings[XORSTR("SkinChanger")][XORSTR("skinsT")][Util::Items::GetItemConfigEntityName(item.first).c_str()]
+		std::string itemName = Util::Items::GetItemConfigEntityName(skin.itemDefinitionIndex);
+		skinSetting[XORSTR("ItemDefinitionIndex")].SetString( itemName.c_str(), itemName.length(), settings.GetAllocator() );
 		skinSetting[XORSTR("PaintKit")] = skin.fallbackPaintKit;
 		skinSetting[XORSTR("Wear")] = skin.fallbackWear;
 		skinSetting[XORSTR("Seed")] = skin.fallbackSeed;
 		skinSetting[XORSTR("StatTrak")] = skin.fallbackStatTrak;
-		skinSetting[XORSTR("CustomName")] = skin.customName;
+		skinSetting[XORSTR("CustomName")].SetString( skin.customName.c_str(), skin.customName.length(), settings.GetAllocator() );
 		#undef skinSetting
 	}
 
@@ -549,7 +545,8 @@ void Settings::LoadDefaultsOrSave(std::string path)
 	settings[XORSTR("UI")][XORSTR("Windows")][XORSTR("Spectators")][XORSTR("sizeY")] = Settings::UI::Windows::Spectators::sizeY;
 
 
-	settings[XORSTR("ClanTagChanger")][XORSTR("value")] = Settings::ClanTagChanger::value;
+	settings[XORSTR("ClanTagChanger")][XORSTR("value")]
+	.SetString(Settings::ClanTagChanger::value, strlen(Settings::ClanTagChanger::value), settings.GetAllocator());
 	settings[XORSTR("ClanTagChanger")][XORSTR("enabled")] = Settings::ClanTagChanger::enabled;
 	settings[XORSTR("ClanTagChanger")][XORSTR("animation")] = Settings::ClanTagChanger::animation;
 	settings[XORSTR("ClanTagChanger")][XORSTR("animation_speed")] = Settings::ClanTagChanger::animationSpeed;
@@ -589,7 +586,8 @@ void Settings::LoadDefaultsOrSave(std::string path)
 	settings[XORSTR("ScreenshotCleaner")][XORSTR("enabled")] = Settings::ScreenshotCleaner::enabled;
 
 	settings[XORSTR("EdgeJump")][XORSTR("enabled")] = Settings::EdgeJump::enabled;
-	settings[XORSTR("EdgeJump")][XORSTR("key")] = Util::GetButtonName(Settings::EdgeJump::key);
+	std::string edgeJumpKey = Util::GetButtonName(Settings::EdgeJump::key);
+	settings[XORSTR("EdgeJump")][XORSTR("key")].SetString( edgeJumpKey.c_str(), edgeJumpKey.length(), settings.GetAllocator() );
 
 	settings[XORSTR("NameStealer")][XORSTR("enabled")] = Settings::NameStealer::enabled;
 	settings[XORSTR("NameStealer")][XORSTR("team")] = Settings::NameStealer::team;
@@ -606,7 +604,8 @@ void Settings::LoadDefaultsOrSave(std::string path)
 	settings[XORSTR("ThirdPerson")][XORSTR("type")] = (int) Settings::ThirdPerson::type;
 
 	settings[XORSTR("JumpThrow")][XORSTR("enabled")] = Settings::JumpThrow::enabled;
-	settings[XORSTR("JumpThrow")][XORSTR("key")] = Util::GetButtonName(Settings::JumpThrow::key);
+	std::string jumpThrowKey = Util::GetButtonName(Settings::JumpThrow::key);
+	settings[XORSTR("JumpThrow")][XORSTR("key")].SetString( jumpThrowKey.c_str(), jumpThrowKey.length(), settings.GetAllocator() );
 
 	settings[XORSTR("DisablePostProcessing")][XORSTR("enabled")] = Settings::DisablePostProcessing::enabled;
 	settings[XORSTR("NoFall")][XORSTR("enabled")] = Settings::NoFall::enabled;
@@ -632,7 +631,10 @@ void Settings::LoadDefaultsOrSave(std::string path)
  	settings[XORSTR("AutoKnife")][XORSTR("Filters")][XORSTR("allies")] = Settings::AutoKnife::Filters::allies;
  	settings[XORSTR("AutoKnife")][XORSTR("onKey")] = Settings::AutoKnife::onKey;
 
-	std::ofstream(path) << styledWriter.write(settings);
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    settings.Accept(writer);
+	std::ofstream(path) << buffer.GetString();
 }
 
 void Settings::LoadConfig(std::string path)
@@ -644,9 +646,12 @@ void Settings::LoadConfig(std::string path)
 		return;
 	}
 
-	Json::Value settings;
-	std::ifstream configDoc(path, std::ifstream::binary);
-	configDoc >> settings;
+    std::ifstream configDoc(path, std::ifstream::binary);
+	std::stringstream ss;
+    ss << configDoc.rdbuf();
+    //Json::Value settings;
+    rapidjson::Document settings;
+    settings.Parse( ss.str().c_str() );
 
 	GetVal(settings[XORSTR("UI")][XORSTR("mainColor")], &Settings::UI::mainColor);
 	GetVal(settings[XORSTR("UI")][XORSTR("bodyColor")], &Settings::UI::bodyColor);
@@ -662,10 +667,12 @@ void Settings::LoadConfig(std::string path)
 			{ ItemDefinitionIndex::INVALID, defaultSettings },
 	};
 
-	for (Json::ValueIterator itr = settings[XORSTR("Aimbot")][XORSTR("weapons")].begin(); itr != settings[XORSTR("Aimbot")][XORSTR("weapons")].end(); itr++)
+	rapidjson::Value &weaponSettings = settings[XORSTR("Aimbot")][XORSTR("weapons")];
+	for (rapidjson::Value::ConstMemberIterator itr = weaponSettings.MemberBegin(); itr != weaponSettings.MemberEnd(); ++itr )
+	//for (Json::ValueIterator itr = .begin(); itr != settings[XORSTR("Aimbot")][XORSTR("weapons")].end(); itr++)
 	{
-		std::string weaponDataKey = itr.key().asString();
-		auto weaponSetting = settings[XORSTR("Aimbot")][XORSTR("weapons")][weaponDataKey];
+		const char *weaponDataKey = itr->name.GetString();
+		rapidjson::Value &weaponSetting = settings[XORSTR("Aimbot")][XORSTR("weapons")][weaponDataKey];
 
 		ItemDefinitionIndex weaponID = Util::Items::GetItemIndex(weaponDataKey);
 
@@ -673,53 +680,53 @@ void Settings::LoadConfig(std::string path)
 			Settings::Aimbot::weapons[weaponID] = AimbotWeapon_t();
 
 		AimbotWeapon_t weapon = {
-				.enabled = weaponSetting[XORSTR( "Enabled" )].asBool(),
-				.silent = weaponSetting[XORSTR( "Silent" )].asBool(),
-				.friendly = weaponSetting[XORSTR( "Friendly" )].asBool(),
-				.closestBone = weaponSetting[XORSTR( "ClosestBone" )].asBool(),
-				.engageLock = weaponSetting[XORSTR( "engageLock" )].asBool(),
-				.engageLockTR = weaponSetting[XORSTR( "engageLockTR" )].asBool(),
-				.aimkeyOnly = weaponSetting[XORSTR( "AimKeyOnly" )].asBool(),
-				.smoothEnabled = weaponSetting[XORSTR( "Smooth" )][XORSTR( "Enabled" )].asBool(),
-				.smoothSaltEnabled = weaponSetting[XORSTR( "Smooth" )][XORSTR( "Salting" )][XORSTR( "Enabled" )].asBool(),
-				.errorMarginEnabled = weaponSetting[XORSTR( "ErrorMargin" )][XORSTR( "Enabled" )].asBool(),
-				.autoAimEnabled = weaponSetting[XORSTR( "AutoAim" )][XORSTR( "Enabled" )].asBool(),
-				.aimStepEnabled = weaponSetting[XORSTR( "AimStep" )][XORSTR( "Enabled" )].asBool(),
-				.rcsEnabled = weaponSetting[XORSTR( "RCS" )][XORSTR( "Enabled" )].asBool(),
-				.rcsAlwaysOn = weaponSetting[XORSTR( "RCS" )][XORSTR( "AlwaysOn" )].asBool(),
-				.spreadLimitEnabled = weaponSetting[XORSTR( "SpreadLimit" )][XORSTR( "Enabled" )].asBool(),
-				.autoPistolEnabled = weaponSetting[XORSTR( "AutoPistol" )][XORSTR( "Enabled" )].asBool(),
-				.autoShootEnabled = weaponSetting[XORSTR( "AutoShoot" )][XORSTR( "Enabled" )].asBool(),
-				.autoScopeEnabled = weaponSetting[XORSTR( "AutoScope" )][XORSTR( "Enabled" )].asBool(),
-				.noShootEnabled = weaponSetting[XORSTR( "NoShoot" )][XORSTR( "Enabled" )].asBool(),
-				.ignoreJumpEnabled = weaponSetting[XORSTR( "IgnoreJump" )][XORSTR( "Enabled" )].asBool(),
-				.ignoreEnemyJumpEnabled = weaponSetting[XORSTR( "IgnoreEnemyJump" )][XORSTR( "Enabled" )].asBool(),
-				.smokeCheck = weaponSetting[XORSTR( "SmokeCheck" )][XORSTR( "Enabled" )].asBool(),
-				.flashCheck = weaponSetting[XORSTR( "FlashCheck" )][XORSTR( "Enabled" )].asBool(),
-				.autoWallEnabled = weaponSetting[XORSTR( "AutoWall" )][XORSTR( "Enabled" )].asBool(),
-				.autoAimRealDistance = weaponSetting[XORSTR( "AutoAim" )][XORSTR( "RealDistance" )].asBool(),
-				.autoSlow = weaponSetting[XORSTR( "AutoSlow" )][XORSTR( "enabled" )].asBool(),
-				.predEnabled = weaponSetting[XORSTR( "Prediction" )][XORSTR( "enabled" )].asBool(),
-				.scopeControlEnabled = weaponSetting[XORSTR( "ScopeControl" )][XORSTR( "Enabled" )].asBool(),
+				.enabled = weaponSetting[XORSTR( "Enabled" )].GetBool(),
+				.silent = weaponSetting[XORSTR( "Silent" )].GetBool(),
+				.friendly = weaponSetting[XORSTR( "Friendly" )].GetBool(),
+				.closestBone = weaponSetting[XORSTR( "ClosestBone" )].GetBool(),
+				.engageLock = weaponSetting[XORSTR( "engageLock" )].GetBool(),
+				.engageLockTR = weaponSetting[XORSTR( "engageLockTR" )].GetBool(),
+				.aimkeyOnly = weaponSetting[XORSTR( "AimKeyOnly" )].GetBool(),
+				.smoothEnabled = weaponSetting[XORSTR( "Smooth" )][XORSTR( "Enabled" )].GetBool(),
+				.smoothSaltEnabled = weaponSetting[XORSTR( "Smooth" )][XORSTR( "Salting" )][XORSTR( "Enabled" )].GetBool(),
+				.errorMarginEnabled = weaponSetting[XORSTR( "ErrorMargin" )][XORSTR( "Enabled" )].GetBool(),
+				.autoAimEnabled = weaponSetting[XORSTR( "AutoAim" )][XORSTR( "Enabled" )].GetBool(),
+				.aimStepEnabled = weaponSetting[XORSTR( "AimStep" )][XORSTR( "Enabled" )].GetBool(),
+				.rcsEnabled = weaponSetting[XORSTR( "RCS" )][XORSTR( "Enabled" )].GetBool(),
+				.rcsAlwaysOn = weaponSetting[XORSTR( "RCS" )][XORSTR( "AlwaysOn" )].GetBool(),
+				.spreadLimitEnabled = weaponSetting[XORSTR( "SpreadLimit" )][XORSTR( "Enabled" )].GetBool(),
+				.autoPistolEnabled = weaponSetting[XORSTR( "AutoPistol" )][XORSTR( "Enabled" )].GetBool(),
+				.autoShootEnabled = weaponSetting[XORSTR( "AutoShoot" )][XORSTR( "Enabled" )].GetBool(),
+				.autoScopeEnabled = weaponSetting[XORSTR( "AutoScope" )][XORSTR( "Enabled" )].GetBool(),
+				.noShootEnabled = weaponSetting[XORSTR( "NoShoot" )][XORSTR( "Enabled" )].GetBool(),
+				.ignoreJumpEnabled = weaponSetting[XORSTR( "IgnoreJump" )][XORSTR( "Enabled" )].GetBool(),
+				.ignoreEnemyJumpEnabled = weaponSetting[XORSTR( "IgnoreEnemyJump" )][XORSTR( "Enabled" )].GetBool(),
+				.smokeCheck = weaponSetting[XORSTR( "SmokeCheck" )][XORSTR( "Enabled" )].GetBool(),
+				.flashCheck = weaponSetting[XORSTR( "FlashCheck" )][XORSTR( "Enabled" )].GetBool(),
+				.autoWallEnabled = weaponSetting[XORSTR( "AutoWall" )][XORSTR( "Enabled" )].GetBool(),
+				.autoAimRealDistance = weaponSetting[XORSTR( "AutoAim" )][XORSTR( "RealDistance" )].GetBool(),
+				.autoSlow = weaponSetting[XORSTR( "AutoSlow" )][XORSTR( "enabled" )].GetBool(),
+				.predEnabled = weaponSetting[XORSTR( "Prediction" )][XORSTR( "enabled" )].GetBool(),
+				.scopeControlEnabled = weaponSetting[XORSTR( "ScopeControl" )][XORSTR( "Enabled" )].GetBool(),
 
-				.engageLockTTR = weaponSetting[XORSTR( "engageLockTTR" )].asInt(),
-				.bone = weaponSetting[XORSTR( "TargetBone" )].asInt(),
-				.smoothType = (SmoothType) weaponSetting[XORSTR( "Smooth" )][XORSTR( "Type" )].asInt(),
-				.aimkey = Util::GetButtonCode(weaponSetting[XORSTR( "AimKey" )].asCString()),
-				.smoothAmount = weaponSetting[XORSTR( "Smooth" )][XORSTR( "Amount" )].asFloat(),
-				.smoothSaltMultiplier = weaponSetting[XORSTR( "Smooth" )][XORSTR( "Salting" )][XORSTR( "Multiplier" )].asFloat(),
-				.errorMarginValue = weaponSetting[XORSTR( "ErrorMargin" )][XORSTR( "Value" )].asFloat(),
-				.autoAimFov = weaponSetting[XORSTR( "AutoAim" )][XORSTR( "FOV" )].asFloat(),
-				.aimStepMin = weaponSetting[XORSTR( "AimStep" )][XORSTR( "min" )].asFloat(),
-				.aimStepMax = weaponSetting[XORSTR( "AimStep" )][XORSTR( "max" )].asFloat(),
-				.rcsAmountX = weaponSetting[XORSTR( "RCS" )][XORSTR( "AmountX" )].asFloat(),
-				.rcsAmountY = weaponSetting[XORSTR( "RCS" )][XORSTR( "AmountY" )].asFloat(),
-				.autoWallValue = weaponSetting[XORSTR( "AutoWall" )][XORSTR( "Value" )].asFloat(),
-				.spreadLimit = weaponSetting[XORSTR( "SpreadLimit" )][XORSTR( "Value" )].asFloat(),
+				.engageLockTTR = weaponSetting[XORSTR( "engageLockTTR" )].GetInt(),
+				.bone = weaponSetting[XORSTR( "TargetBone" )].GetInt(),
+				.smoothType = (SmoothType) weaponSetting[XORSTR( "Smooth" )][XORSTR( "Type" )].GetInt(),
+				.aimkey = Util::GetButtonCode(weaponSetting[XORSTR( "AimKey" )].GetString()),
+				.smoothAmount = weaponSetting[XORSTR( "Smooth" )][XORSTR( "Amount" )].GetFloat(),
+				.smoothSaltMultiplier = weaponSetting[XORSTR( "Smooth" )][XORSTR( "Salting" )][XORSTR( "Multiplier" )].GetFloat(),
+				.errorMarginValue = weaponSetting[XORSTR( "ErrorMargin" )][XORSTR( "Value" )].GetFloat(),
+				.autoAimFov = weaponSetting[XORSTR( "AutoAim" )][XORSTR( "FOV" )].GetFloat(),
+				.aimStepMin = weaponSetting[XORSTR( "AimStep" )][XORSTR( "min" )].GetFloat(),
+				.aimStepMax = weaponSetting[XORSTR( "AimStep" )][XORSTR( "max" )].GetFloat(),
+				.rcsAmountX = weaponSetting[XORSTR( "RCS" )][XORSTR( "AmountX" )].GetFloat(),
+				.rcsAmountY = weaponSetting[XORSTR( "RCS" )][XORSTR( "AmountY" )].GetFloat(),
+				.autoWallValue = weaponSetting[XORSTR( "AutoWall" )][XORSTR( "Value" )].GetFloat(),
+				.spreadLimit = weaponSetting[XORSTR( "SpreadLimit" )][XORSTR( "Value" )].GetFloat(),
 		};
 
 		for (int bone = BONE_PELVIS; bone <= BONE_RIGHT_SOLE; bone++)
-			weapon.desiredBones[bone] = weaponSetting[XORSTR("DesiredBones")][XORSTR("Bones")][bone].asBool();
+			weapon.desiredBones[bone] = weaponSetting[XORSTR("DesiredBones")][XORSTR("Bones")][bone].GetBool();
 		Settings::Aimbot::weapons[weaponID] = weapon;
 	}
 
@@ -912,17 +919,19 @@ void Settings::LoadConfig(std::string path)
 	GetVal(settings[XORSTR("Spammer")][XORSTR("say_team")], &Settings::Spammer::say_team);
 	GetVal(settings[XORSTR("Spammer")][XORSTR("KillSpammer")][XORSTR("enabled")], &Settings::Spammer::KillSpammer::enabled);
 	GetVal(settings[XORSTR("Spammer")][XORSTR("KillSpammer")][XORSTR("say_team")], &Settings::Spammer::KillSpammer::sayTeam);
-	if (!settings[XORSTR("Spammer")][XORSTR("KillSpammer")][XORSTR("messages")].isNull())
+	rapidjson::Value &killSpammerMessages = settings[XORSTR("Spammer")][XORSTR("KillSpammer")][XORSTR("messages")];
+	if (!killSpammerMessages.IsNull())
 	{
 		Settings::Spammer::KillSpammer::messages.clear();
-		for (const Json::Value& message : settings[XORSTR("Spammer")][XORSTR("KillSpammer")][XORSTR("messages")])
-			Settings::Spammer::KillSpammer::messages.push_back(message.asString());
+        for ( rapidjson::Value::ConstValueIterator itr = killSpammerMessages.Begin(); itr != killSpammerMessages.End(); ++itr )
+			Settings::Spammer::KillSpammer::messages.push_back(itr->GetString());
 	}
-	if (!settings[XORSTR("Spammer")][XORSTR("NormalSpammer")][XORSTR("messages")].isNull())
+	rapidjson::Value &normalSpammerMessages = settings[XORSTR("Spammer")][XORSTR("NormalSpammer")][XORSTR("messages")];
+	if (!normalSpammerMessages.IsNull())
 	{
 		Settings::Spammer::NormalSpammer::messages.clear();
-		for (const Json::Value& message : settings[XORSTR("Spammer")][XORSTR("NormalSpammer")][XORSTR("messages")])
-			Settings::Spammer::NormalSpammer::messages.push_back(message.asString());
+        for ( rapidjson::Value::ConstValueIterator itr = normalSpammerMessages.Begin(); itr != normalSpammerMessages.End(); ++itr )
+			Settings::Spammer::NormalSpammer::messages.push_back(itr->GetString());
 	}
 	GetVal(settings[XORSTR("Spammer")][XORSTR("PositionSpammer")][XORSTR("show_name")], &Settings::Spammer::PositionSpammer::showName);
 	GetVal(settings[XORSTR("Spammer")][XORSTR("PositionSpammer")][XORSTR("show_weapon")], &Settings::Spammer::PositionSpammer::showWeapon);
@@ -988,53 +997,56 @@ void Settings::LoadConfig(std::string path)
 	Settings::Skinchanger::skinsCT.clear();
 	Settings::Skinchanger::skinsT.clear();
 
-	for (Json::ValueIterator itr = settings[XORSTR("SkinChanger")][XORSTR("skinsCT")].begin(); itr != settings[XORSTR("SkinChanger")][XORSTR("skinsCT")].end(); itr++)
+	rapidjson::Value &skinsCT = settings[XORSTR("SkinChanger")][XORSTR("skinsCT")];
+	for( rapidjson::Value::ConstMemberIterator itr = skinsCT.MemberBegin(); itr != skinsCT.MemberEnd(); ++itr )
 	{
-		std::string skinDataKey = itr.key().asString();
-		auto skinSetting = settings[XORSTR("SkinChanger")][XORSTR("skinsCT")][skinDataKey];
+		const char *skinDataKey = itr->name.GetString();
+		//auto skinSetting = settings[XORSTR("SkinChanger")][XORSTR("skinsCT")][skinDataKey];
 
 		ItemDefinitionIndex weaponID = (ItemDefinitionIndex) Util::Items::GetItemIndex(skinDataKey);
 
 		ItemDefinitionIndex defIndex = ItemDefinitionIndex::INVALID;
-		GetOrdinal<ItemDefinitionIndex, Util::Items::GetItemIndex>(skinSetting[XORSTR("ItemDefinitionIndex")], &defIndex);
+		GetOrdinal<ItemDefinitionIndex, Util::Items::GetItemIndex>(itr->value[XORSTR("ItemDefinitionIndex")], &defIndex);
 
 		if (Settings::Skinchanger::skinsCT.find((ItemDefinitionIndex) weaponID) == Settings::Skinchanger::skinsCT.end())
 			Settings::Skinchanger::skinsCT[(ItemDefinitionIndex) weaponID] = AttribItem_t();
 
 		AttribItem_t skin = {
 				defIndex,
-				skinSetting[XORSTR("PaintKit")].asInt(),
-				skinSetting[XORSTR("Wear")].asFloat(),
-				skinSetting[XORSTR("Seed")].asInt(),
-				skinSetting[XORSTR("StatTrak")].asInt(),
+                itr->value[XORSTR("PaintKit")].GetInt(),
+                itr->value[XORSTR("Wear")].GetFloat(),
+                itr->value[XORSTR("Seed")].GetInt(),
+                itr->value[XORSTR("StatTrak")].GetInt(),
 				-1,
-				skinSetting[XORSTR("CustomName")].asString(),
+                itr->value[XORSTR("CustomName")].GetString(),
 		};
 
 		Settings::Skinchanger::skinsCT[(ItemDefinitionIndex) weaponID] = skin;
 	}
 
-	for (Json::ValueIterator itr = settings[XORSTR("SkinChanger")][XORSTR("skinsT")].begin(); itr != settings[XORSTR("SkinChanger")][XORSTR("skinsT")].end(); itr++)
+	rapidjson::Value &skinsT = settings[XORSTR("SkinChanger")][XORSTR("skinsT")];
+	//for (Json::ValueIterator itr = settings[XORSTR("SkinChanger")][XORSTR("skinsT")].begin(); itr != settings[XORSTR("SkinChanger")][XORSTR("skinsT")].end(); itr++)
+	for( rapidjson::Value::ConstMemberIterator itr = skinsT.MemberBegin(); itr != skinsT.MemberEnd(); ++itr )
 	{
-		std::string skinDataKey = itr.key().asString();
-		auto skinSetting = settings[XORSTR("SkinChanger")][XORSTR("skinsT")][skinDataKey];
+		std::string skinDataKey = itr->name.GetString();
+		//auto skinSetting = settings[XORSTR("SkinChanger")][XORSTR("skinsT")][skinDataKey];
 
 		ItemDefinitionIndex weaponID = (ItemDefinitionIndex) Util::Items::GetItemIndex(skinDataKey);
 
 		ItemDefinitionIndex defIndex = ItemDefinitionIndex::INVALID;
-		GetOrdinal<ItemDefinitionIndex, Util::Items::GetItemIndex>(skinSetting[XORSTR("ItemDefinitionIndex")], &defIndex);
+		GetOrdinal<ItemDefinitionIndex, Util::Items::GetItemIndex>(itr->value[XORSTR("ItemDefinitionIndex")], &defIndex);
 
 		if (Settings::Skinchanger::skinsT.find((ItemDefinitionIndex) weaponID) == Settings::Skinchanger::skinsT.end())
 			Settings::Skinchanger::skinsT[(ItemDefinitionIndex) weaponID] = AttribItem_t();
 
 		AttribItem_t skin = {
 				defIndex,
-				skinSetting[XORSTR("PaintKit")].asInt(),
-				skinSetting[XORSTR("Wear")].asFloat(),
-				skinSetting[XORSTR("Seed")].asInt(),
-				skinSetting[XORSTR("StatTrak")].asInt(),
+                itr->value[XORSTR("PaintKit")].GetInt(),
+                itr->value[XORSTR("Wear")].GetFloat(),
+                itr->value[XORSTR("Seed")].GetInt(),
+                itr->value[XORSTR("StatTrak")].GetInt(),
 				-1,
-				skinSetting[XORSTR("CustomName")].asString(),
+                itr->value[XORSTR("CustomName")].GetString(),
 		};
 
 		Settings::Skinchanger::skinsT[(ItemDefinitionIndex) weaponID] = skin;
@@ -1180,62 +1192,60 @@ void Settings::LoadConfig(std::string path)
 
 void Settings::SaveGrenadeInfo(std::string path)
 {
-	Json::Value grenadeInfos;
+	//Json::Value grenadeInfos;
+	rapidjson::Document document;
+	rapidjson::Value grenadeInfos(rapidjson::kArrayType);
 	for (auto grenadeInfo = GrenadeHelper::grenadeInfos.begin(); grenadeInfo != GrenadeHelper::grenadeInfos.end(); grenadeInfo++)
 	{
-		Json::Value act;
-		act[XORSTR("name")] = grenadeInfo->name.c_str();
-		act[XORSTR("gType")] = grenadeInfo->gType;
-		act[XORSTR("tType")] = grenadeInfo->tType;
-		act[XORSTR("pos")][XORSTR("x")] = grenadeInfo->pos.x;
-		act[XORSTR("pos")][XORSTR("y")] = grenadeInfo->pos.y;
-		act[XORSTR("pos")][XORSTR("z")] = grenadeInfo->pos.z;
+		rapidjson::Value grenade;
+        grenade[XORSTR("name")].SetString(grenadeInfo->name.c_str(), grenadeInfo->name.length(), document.GetAllocator());
+        grenade[XORSTR("gType")] = grenadeInfo->gType;
+        grenade[XORSTR("tType")] = grenadeInfo->tType;
+        grenade[XORSTR("pos")][XORSTR("x")] = grenadeInfo->pos.x;
+        grenade[XORSTR("pos")][XORSTR("y")] = grenadeInfo->pos.y;
+        grenade[XORSTR("pos")][XORSTR("z")] = grenadeInfo->pos.z;
 
-		act[XORSTR("angle")][XORSTR("x")] = grenadeInfo->angle.x;
-		act[XORSTR("angle")][XORSTR("y")] = grenadeInfo->angle.y;
+        grenade[XORSTR("angle")][XORSTR("x")] = grenadeInfo->angle.x;
+        grenade[XORSTR("angle")][XORSTR("y")] = grenadeInfo->angle.y;
 
-		grenadeInfos.append(act);
+        grenadeInfos.PushBack( grenade, document.GetAllocator() );
 	}
 
-	Json::Value data;
-	Json::StyledWriter styledWriter;
+	// this is called "smokeinfos" but is the main key for grenadeinfos
+	document.AddMember("smokeinfos", grenadeInfos, document.GetAllocator());
 
-	data[XORSTR("smokeinfos")] = grenadeInfos;
-
-	std::ofstream(path) << styledWriter.write(data);
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer( buffer );
+    document.Accept(writer);
+	std::ofstream(path) << buffer.GetString();
 }
 
 void Settings::LoadGrenadeInfo(std::string path)
 {
 	if (!std::ifstream(path).good() || !DoesFileExist(path.c_str()))
 		return;
-	Json::Value data;
-	std::ifstream configDoc(path, std::ifstream::binary);
-	try {
-		configDoc >> data;
-	}
-	catch (...)
-	{
-		cvar->ConsoleDPrintf(XORSTR("Error parsing the config file.\n"));
-		return;
-	}
 
-	Json::Value array = data[XORSTR("smokeinfos")];
+    rapidjson::Document document;
+	std::ifstream configDoc(path, std::ifstream::binary);
+    std::stringstream ss;
+    ss << configDoc.rdbuf();
+    document.Parse( ss.str().c_str() );
+
+
+	rapidjson::Value &array = document[XORSTR("smokeinfos")];
 	Settings::GrenadeHelper::grenadeInfos = {};
 
-	for (Json::Value::iterator it = array.begin(); it != array.end(); ++it)
+	//for (Json::Value::iterator it = array.begin(); it != array.end(); ++it)
+	for (rapidjson::Value::ConstMemberIterator itr = array.MemberBegin(); itr != array.MemberEnd(); ++itr )
 	{
-		Json::Value& act = *it;
+		//Json::Value& act = *it;
+		const rapidjson::Value &grenade = itr->value;
 
-		const char* name = act[XORSTR("name")].asCString();
-
-		GrenadeType gType = (GrenadeType)act[XORSTR("gType")].asInt();
-		ThrowType tType = (ThrowType)act[XORSTR("tType")].asInt();
-		Json::Value pos = act[XORSTR("pos")];
-		Vector posVec(pos[XORSTR("x")].asFloat(), pos[XORSTR("y")].asFloat(), pos[XORSTR("z")].asFloat());
-		Json::Value angle = act[XORSTR("angle")];
-		QAngle vAngle(angle[XORSTR("x")].asFloat(), angle[XORSTR("y")].asFloat(), 0.f);
-		Settings::GrenadeHelper::grenadeInfos.emplace_back(gType, posVec, vAngle, tType, name);
+		GrenadeType gType = (GrenadeType)grenade[XORSTR("gType")].GetInt();
+		ThrowType tType = (ThrowType)grenade[XORSTR("tType")].GetInt();
+		Vector posVec(grenade[XORSTR("pos")][XORSTR("x")].GetFloat(), grenade[XORSTR("pos")][XORSTR("y")].GetFloat(), grenade[XORSTR("pos")][XORSTR("z")].GetFloat());
+		QAngle vAngle(grenade[XORSTR("angle")][XORSTR("x")].GetFloat(), grenade[XORSTR("angle")][XORSTR("y")].GetFloat(), 0.f);
+		Settings::GrenadeHelper::grenadeInfos.emplace_back(gType, posVec, vAngle, tType, grenade[XORSTR("name")].GetString());
 	}
 }
 

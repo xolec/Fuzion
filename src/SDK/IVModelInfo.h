@@ -100,9 +100,9 @@ public:
 struct mstudiobone_t {
 	int sznameindex;
 
-	inline char *const pszName(void) const
+	inline const char *pszName(void) const
 	{
-		return ((char *) this) + sznameindex;
+		return ((const char *) this) + sznameindex;
 	}
 
 	int parent;        // parent bone
@@ -133,9 +133,9 @@ struct mstudiobone_t {
 
 	int surfacepropidx;    // index into string tablefor property name
 
-	inline char *const pszSurfaceProp(void) const
+	inline const char *pszSurfaceProp(void) const
 	{
-		return ((char *) this) + surfacepropidx;
+		return ((const char *) this) + surfacepropidx;
 	}
 
 	inline int GetSurfaceProp(void) const
@@ -170,9 +170,9 @@ struct mstudiobbox_t {
 struct mstudiohitboxset_t {
 	int sznameindex;
 
-	inline char *const pszName() const
+	inline const char *pszName() const
 	{
-		return ((char *) this) + sznameindex;
+		return ((const char *) this) + sznameindex;
 	}
 
 	int numhitboxes;
@@ -360,9 +360,9 @@ struct studiohdr_t {
 
 	int surfacepropindex;
 
-	inline char *const pszSurfaceProp() const
+	inline const char *pszSurfaceProp() const
 	{
-		return ((char *) this) + surfacepropindex;
+		return ((const char *) this) + surfacepropindex;
 	}
 
 	// Key values
@@ -403,9 +403,9 @@ struct studiohdr_t {
 	// for demand loaded animation blocks
 	int szanimblocknameindex;
 
-	inline char *const pszAnimBlockName() const
+	inline const char *pszAnimBlockName() const
 	{
-		return ((char *) this) + szanimblocknameindex;
+		return ((const char *) this) + szanimblocknameindex;
 	}
 
 	int numanimblocks;

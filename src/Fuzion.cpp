@@ -1,5 +1,3 @@
-#include <thread>
-
 #include "hooker.h"
 #include "interfaces.h"
 #include "Utils/util.h"
@@ -17,9 +15,7 @@
 #include "Hacks/valvedscheck.h"
 #include "settings.h"
 
-
 static EventListener* eventListener = nullptr;
-
 const char *Util::logFileName = "/tmp/fuzion.log";
 std::vector<VMT*> createdVMTs;
 
@@ -27,37 +23,38 @@ std::vector<VMT*> createdVMTs;
 //#include "../build_id_hex" // Made by ./build script.
 //};
 
-void MainThread()
+/* Entrypoint to the Library. Called when loading */
+int __attribute__((constructor)) Startup()
 {
-	Interfaces::FindInterfaces();
+    Interfaces::FindInterfaces();
     Interfaces::DumpInterfaces();
 
-    cvar->ConsoleDPrintf(XORSTR("Loading...\n"));
+    cvar->ConsoleDPrintf("Loading...\n");
 
-	Hooker::FindSetNamedSkybox();
-	Hooker::FindViewRender();
-	Hooker::FindSDLInput();
-	Hooker::FindIClientMode();
-	Hooker::FindGlobalVars();
-	Hooker::FindCInput();
-	Hooker::FindGlowManager();
-	Hooker::FindPlayerResource();
-	Hooker::FindGameRules();
-	Hooker::FindRankReveal();
-	Hooker::FindSendClanTag();
-	Hooker::FindPrediction();
-	Hooker::FindSetLocalPlayerReady();
-	Hooker::FindSurfaceDrawing();
-	Hooker::FindGetLocalClient();
-	Hooker::FindLineGoesThroughSmoke();
-	Hooker::FindInitKeyValues();
-	Hooker::FindLoadFromBuffer();
-	//Hooker::FindVstdlibFunctions();
-	Hooker::FindOverridePostProcessingDisable();
+    Hooker::FindSetNamedSkybox();
+    Hooker::FindViewRender();
+    Hooker::FindSDLInput();
+    Hooker::FindIClientMode();
+    Hooker::FindGlobalVars();
+    Hooker::FindCInput();
+    Hooker::FindGlowManager();
+    Hooker::FindPlayerResource();
+    Hooker::FindGameRules();
+    Hooker::FindRankReveal();
+    Hooker::FindSendClanTag();
+    Hooker::FindPrediction();
+    Hooker::FindSetLocalPlayerReady();
+    Hooker::FindSurfaceDrawing();
+    Hooker::FindGetLocalClient();
+    Hooker::FindLineGoesThroughSmoke();
+    Hooker::FindInitKeyValues();
+    Hooker::FindLoadFromBuffer();
+    //Hooker::FindVstdlibFunctions();
+    Hooker::FindOverridePostProcessingDisable();
     Hooker::FindPanelArrayOffset();
     Hooker::FindPlayerAnimStateOffset();
     Hooker::FindPlayerAnimOverlayOffset();
-	Hooker::FindSequenceActivity();
+    Hooker::FindSequenceActivity();
     Hooker::FindAbsFunctions();
     Hooker::FindItemSystem();
 
@@ -70,7 +67,7 @@ void MainThread()
     clientVMT = new VMT(client);
     clientVMT->HookVM(Hooks::LevelInitPostEntity, 6);
     clientVMT->HookVM(Hooks::FrameStageNotify, 37);
-	clientVMT->ApplyVMT();
+    clientVMT->ApplyVMT();
 
     clientModeVMT = new VMT(clientMode);
     clientModeVMT->HookVM(Hooks::OverrideView, 19);
@@ -84,8 +81,8 @@ void MainThread()
     engineVGuiVMT->ApplyVMT();
 
     gameEventsVMT = new VMT(gameEvents);
-	gameEventsVMT->HookVM(Hooks::FireEventClientSide, 10);
-	gameEventsVMT->ApplyVMT();
+    gameEventsVMT->HookVM(Hooks::FireEventClientSide, 10);
+    gameEventsVMT->ApplyVMT();
 
     inputInternalVMT = new VMT(inputInternal);
     inputInternalVMT->HookVM(Hooks::SetKeyCodeState, 92);
@@ -99,7 +96,7 @@ void MainThread()
     materialVMT = new VMT(material);
     materialVMT->HookVM(Hooks::OverrideConfig, 21);
     materialVMT->HookVM(Hooks::BeginFrame, 42);
-	materialVMT->ApplyVMT();
+    materialVMT->ApplyVMT();
 
     modelRenderVMT = new VMT(modelRender);
     modelRenderVMT->HookVM(Hooks::DrawModelExecute, 21);
@@ -115,23 +112,21 @@ void MainThread()
 
     surfaceVMT = new VMT(surface);
     surfaceVMT->HookVM(Hooks::OnScreenSizeChanged, 116);
-	surfaceVMT->ApplyVMT();
+    surfaceVMT->ApplyVMT();
 
     viewRenderVMT = new VMT(viewRender);
     viewRenderVMT->HookVM(Hooks::RenderView, 6 );
     viewRenderVMT->HookVM(Hooks::RenderSmokePostViewmodel, 42);
     viewRenderVMT->ApplyVMT();
-    
-	eventListener = new EventListener({ XORSTR("cs_game_disconnected"), XORSTR("player_connect_full"), XORSTR("player_death"), XORSTR("item_purchase"), XORSTR("item_remove"), XORSTR("item_pickup"), XORSTR("player_hurt"), XORSTR("bomb_begindefuse"), XORSTR("enter_bombzone"), XORSTR("bomb_beginplant"), XORSTR("switch_team") });
 
-	if (Hooker::HookRecvProp(XORSTR("CBaseViewModel"), XORSTR("m_nSequence"), SkinChanger::sequenceHook))
-		SkinChanger::sequenceHook->SetProxyFunction((RecvVarProxyFn) SkinChanger::SetViewModelSequence);
+    eventListener = new EventListener({ XORSTR("cs_game_disconnected"), XORSTR("player_connect_full"), XORSTR("player_death"), XORSTR("item_purchase"), XORSTR("item_remove"), XORSTR("item_pickup"), XORSTR("player_hurt"), XORSTR("bomb_begindefuse"), XORSTR("enter_bombzone"), XORSTR("bomb_beginplant"), XORSTR("switch_team") });
 
-	//NetVarManager::DumpNetvars();
+    if (Hooker::HookRecvProp(XORSTR("CBaseViewModel"), XORSTR("m_nSequence"), SkinChanger::sequenceHook))
+        SkinChanger::sequenceHook->SetProxyFunction((RecvVarProxyFn) SkinChanger::SetViewModelSequence);
 
-	//Settings::LoadSettings();
+    //NetVarManager::DumpNetvars();
 
-	srand(time(nullptr)); // Seed random # Generator so we can call rand() later
+    srand(time(nullptr)); // Seed random # Generator so we can call rand() later
 
     // Build bonemaps here if we are already in-game
     if( engine->IsInGame() ){
@@ -139,15 +134,6 @@ void MainThread()
     }
 
     cvar->ConsoleColorPrintf(ColorRGBA(0, 225, 0), XORSTR("\nFuzion Successfully loaded.\n"));
-}
-/* Entrypoint to the Library. Called when loading */
-int __attribute__((constructor)) Startup()
-{
-	std::thread mainThread(MainThread);
-	// The root of all suffering is attachment
-	// Therefore our little buddy must detach from this realm.
-	// Farewell my thread, may we join again some day..
-	mainThread.detach();
 
 	return 0;
 }

@@ -60,12 +60,12 @@ void SkinChanger::FrameStageNotifyModels(ClientFrameStage_t stage)
 
 			const AttribItem_t &currentModel = localplayer->GetTeam() == TeamID::TEAM_COUNTER_TERRORIST ? Settings::Skinchanger::skinsCT.at(*weapon->GetItemDefinitionIndex()) : Settings::Skinchanger::skinsT.at(*weapon->GetItemDefinitionIndex());
 
-			if (currentModel.itemDefinitionIndex != ItemDefinitionIndex::INVALID && ItemDefinitionIndexMap.find(currentModel.itemDefinitionIndex) != ItemDefinitionIndexMap.end())
+			if (currentModel.itemDefinitionIndex != ItemDefinitionIndex::INVALID && Util::Items::IsIndexInMap(currentModel.itemDefinitionIndex) )
 			{
-				*weapon->GetModelIndex() = modelInfo->GetModelIndex(ItemDefinitionIndexMap.at(currentModel.itemDefinitionIndex).entityModel);
-				if (ItemDefinitionIndexMap.find(*weapon->GetItemDefinitionIndex()) != ItemDefinitionIndexMap.end())
+				*weapon->GetModelIndex() = modelInfo->GetModelIndex(Util::Items::GetItemModelName(currentModel.itemDefinitionIndex).c_str());
+				if (Util::Items::IsIndexInMap(*weapon->GetItemDefinitionIndex()))//ItemDefinitionIndexMap.find(*weapon->GetItemDefinitionIndex()) != ItemDefinitionIndexMap.end())
 				{
-					killIcons[ItemDefinitionIndexMap.at(*weapon->GetItemDefinitionIndex()).killIcon] = ItemDefinitionIndexMap.at(currentModel.itemDefinitionIndex).killIcon;
+					killIcons[Util::Items::GetItemKillIcon(*weapon->GetItemDefinitionIndex())]= Util::Items::GetItemKillIcon(currentModel.itemDefinitionIndex);//ItemDefinitionIndexMap.at(currentModel.itemDefinitionIndex).killIcon;
 					*weapon->GetItemDefinitionIndex() = currentModel.itemDefinitionIndex;
 				}
 			}
@@ -79,9 +79,9 @@ void SkinChanger::FrameStageNotifyModels(ClientFrameStage_t stage)
 		if (!activeWeapon)
 			return;
 
-		if (ItemDefinitionIndexMap.find(*activeWeapon->GetItemDefinitionIndex()) != ItemDefinitionIndexMap.end())
+		if (Util::Items::IsIndexInMap(*activeWeapon->GetItemDefinitionIndex()))//ItemDefinitionIndexMap.find(*activeWeapon->GetItemDefinitionIndex()) != ItemDefinitionIndexMap.end())
 			if (Settings::Skinchanger::Models::enabled)
-				*viewmodel->GetModelIndex() = modelInfo->GetModelIndex(ItemDefinitionIndexMap.at(*activeWeapon->GetItemDefinitionIndex()).entityModel);
+				*viewmodel->GetModelIndex() = modelInfo->GetModelIndex(Util::Items::GetItemEntityName(*activeWeapon->GetItemDefinitionIndex()).c_str());//ItemDefinitionIndexMap.at(*activeWeapon->GetItemDefinitionIndex()).entityModel);
 
 		if (!entityList->GetClientEntityFromHandle((void *) localplayer->GetWearables()))
 		{
@@ -116,14 +116,14 @@ void SkinChanger::FrameStageNotifyModels(ClientFrameStage_t stage)
 		{
 			const AttribItem_t &currentModel = localplayer->GetTeam() == TeamID::TEAM_COUNTER_TERRORIST ? Settings::Skinchanger::skinsCT.at(ItemDefinitionIndex::GLOVE_CT_SIDE) : Settings::Skinchanger::skinsT.at(ItemDefinitionIndex::GLOVE_T_SIDE);
 
-			if (currentModel.itemDefinitionIndex != ItemDefinitionIndex::INVALID && ItemDefinitionIndexMap.find(currentModel.itemDefinitionIndex) != ItemDefinitionIndexMap.end())
+			if (currentModel.itemDefinitionIndex != ItemDefinitionIndex::INVALID && Util::Items::IsIndexInMap( currentModel.itemDefinitionIndex ) )
 			{
 				if (currentModel.itemDefinitionIndex == ItemDefinitionIndex::GLOVE_CT_SIDE || currentModel.itemDefinitionIndex == ItemDefinitionIndex::GLOVE_T_SIDE)
 					return;
 
 				if (*glove->GetItemDefinitionIndex() != currentModel.itemDefinitionIndex)
 				{
-					glove->SetModelIndex(modelInfo->GetModelIndex(ItemDefinitionIndexMap.at(currentModel.itemDefinitionIndex).entityModel));
+					glove->SetModelIndex(modelInfo->GetModelIndex(Util::Items::GetItemModelName(currentModel.itemDefinitionIndex).c_str()));
 					*glove->GetItemDefinitionIndex() = currentModel.itemDefinitionIndex;
                     *glove->GetInitialized() = true;
 				}

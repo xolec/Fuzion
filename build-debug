@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+filename="$(cat build_id)"
 cmake -DCMAKE_BUILD_TYPE="DEBUG"
 make -j"$(grep -c "^processor" /proc/cpuinfo)"
-mv libFuzion.so "$(cat build_id)"
+mv libFuzion.so "$filename"
+
+#objcopy --only-keep-debug "$filename" "$filename.debug"
+#objcopy --strip-debug "$filename"

@@ -23,20 +23,19 @@ if [ ! -f build_id ]; then
 fi
 
 filename=$(cat build_id)
+sed -i "1cset \$library = \"$(pwd)/$filename\"" ./gdb_debug_inject.txt
 
 # https://www.kernel.org/doc/Documentation/security/Yama.txt
 echo "2" | sudo tee /proc/sys/kernel/yama/ptrace_scope # Only allows root to inject code. This is temporary until reboot.
 
 # Adjust the Sleep time below for your system if needed. 
 # This sends 2 interrupts to CS:GO after gdb attachs so gdb will drop into a shell.
-sleep 3 && kill -2 "$csgo_pid" && sleep 1 && kill -2 "$csgo_pid" &
+# sleep 4 && kill -2 "$csgo_pid" && sleep 2 && kill -2 "$csgo_pid" &
 
 # dlopen method Credits: Aixxe @ aixxe.net
 if grep -q "$filename" /proc/"$csgo_pid"/maps; then
-    (echo -e "continue\\n"; cat) | sudo gdb -p "$csgo_pid"
+    sudo gdb -p "$csgo_pid" -s "$(pwd)/$filename.debug" -x ./gdb_debug_attach.txt
 else
     echo "Injecting build $filename"
-    sudo cp "$filename" /"$filename"
-    (echo -e "set confirm off\\nset \$dlopen = (void*(*)(char*, int)) dlopen\\ncall \$dlopen(\"/$filename\", 1)\\n"; cat) | sudo gdb -p "$csgo_pid"
-    sudo rm /"$filename"
+    sudo gdb -p "$csgo_pid" -s "$(pwd)/$filename.debug" -x ./gdb_debug_inject.txt
 fi
